@@ -53,13 +53,7 @@ const registerUser = asyncHandler(async (req, res) => {
     avatar: avatar.url, // Store the Cloudinary URL
     coverimage: coverimage ? coverimage.secure_url : '', // Optional cover image
   });
-
-  res.status(201).json({
-    success: true,
-    message: 'User registered successfully',
-  })
-
-
+  // Check if user creation was successful
   const usercreated = await User.findById(user._id).select('-password -refreshToken');
   if (!usercreated) {
     throw new ApiError(500, 'User creation failed');
