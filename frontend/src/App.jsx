@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import './App.css';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1/users';
@@ -8,6 +9,7 @@ const API_BASE_URL = 'http://localhost:8000/api/v1/users';
 function App() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     fullname: '',
@@ -29,26 +31,29 @@ function App() {
 
     try {
       if (isLogin) {
-        // Login Logic
         const response = await axios.post(`${API_BASE_URL}/login`, {
           email: formData.email,
           password: formData.password
         });
         
         toast.success('Login Successful!');
-        console.log('Login Response:', response.data);
-        // Store tokens if needed
-        // localStorage.setItem('accessToken', response.data.data.accessToken);
+
+        // Save user data to localStorage
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+
+        // Redirect to dashboard
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
+
       } else {
-        // Signup Logic (Multipart for avatar/cover)
-        // Note: Backend currently expects multipart because of multer.fields
         const data = new FormData();
         data.append('fullname', formData.fullname);
         data.append('username', formData.username);
         data.append('email', formData.email);
         data.append('password', formData.password);
         
-        const response = await axios.post(`${API_BASE_URL}/register`, data, {
+        await axios.post(`${API_BASE_URL}/register`, data, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -56,12 +61,10 @@ function App() {
 
         toast.success('Registration Successful! Please login.');
         setIsLogin(true);
-        console.log('Signup Response:', response.data);
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Something went wrong';
       toast.error(errorMessage);
-      console.error('Auth Error:', error);
     } finally {
       setLoading(false);
     }
